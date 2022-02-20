@@ -222,7 +222,7 @@
           "channel": "{{trigger.message.ChannelSid}}",
           "from": "{{flow.channel.address}}",
           "to": "{{contact.channel.address}}",
-          "body": "Looking up the following phone numbers:\n\n{{widgets.findPhoneNumbers.parsed.results}}"
+          "body": "Looking up the following phone numbers:\n\n{{widgets.findPhoneNumbers.parsed.results | join: \", \"}}"
         }
       },
       {

@@ -17,7 +17,9 @@ exports.handler = async(context, event, callback) => {
       defaultCountry
     );
     
-    results = results.map((aResult) => aResult.number.number);
+    // 1. Get all the phones numbers.
+    // 2. Filter the phones numbers by removing duplicates.
+    results = [... new Set(results.map((aResult) => aResult.number.number))];
     return callback(null, {results, size: results.length});
   } catch(e) {
     return callback(e);

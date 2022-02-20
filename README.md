@@ -12,7 +12,6 @@ You will need the following:
 - [Twilio Phone Number](https://console.twilio.com/us1/develop/phone-numbers/manage/search)
 - [Google Vision API](https://cloud.google.com/vision/docs/ocr)
 - [Service Account Key in JSON](https://cloud.google.com/docs/authentication/getting-started)
-- 
 
 ## Getting Started
 
