@@ -8,7 +8,9 @@
     "deploy": "twilio-run deploy"
   },
   "dependencies": {
+    "@google-cloud/vision": "^2.4.2",
     "@twilio/runtime-handler": "1.2.2",
+    "libphonenumber-js": "^1.9.49",
     "twilio": "^3.74.0"
   },
   "devDependencies": {
