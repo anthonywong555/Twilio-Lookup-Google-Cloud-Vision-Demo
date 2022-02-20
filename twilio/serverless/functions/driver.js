@@ -1,9 +1,15 @@
+/**
+ * This function will create a Studio Flow Execution
+ * @param {Object} context 
+ * @param {Object} event 
+ * @param {Function} callback 
+ * @returns Studio Flow Execution Object
+ */
 exports.handler = async(context, event, callback) => {
   try {
+    const {From, Body} = event;
     const {ACCOUNT_SID, AUTH_TOKEN, TWILIO_STUDIO_FLOW, TWILIO_PHONE_NUMBER} = context;
     const twilioClient = require('twilio')(ACCOUNT_SID, AUTH_TOKEN);
-    
-    const {From, Body} = event;
 
     // Get all the MediaUrl##'s Value from the Event
     const MEDIA_PREFIX = 'MediaUrl';

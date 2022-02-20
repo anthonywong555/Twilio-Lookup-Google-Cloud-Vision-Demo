@@ -1,3 +1,10 @@
+/**
+ * This driver will perform OCR, using Google Vision, on MMS.
+ * @param {Object} context 
+ * @param {Object} event 
+ * @param {Function} callback 
+ * @returns 
+ */
 exports.handler = async(context, event, callback) => {
   try {
     const {mediaURL} = event;
@@ -22,14 +29,9 @@ exports.handler = async(context, event, callback) => {
     // Performs text detection on the image file
     const [result] = await client.textDetection(mediaURL);
     const labels = result.textAnnotations;
-    /*
-    labels.pop();
-    const allText = labels.reduce(
-      (prevDes, label) => prevDes + label.description,
-      ''
-    );
-    */
-   const allText = labels[0].description;
+
+    // Returns all text from the MMS.
+    const allText = labels[0].description;
 
     return callback(null, allText);
   } catch(e) {
