@@ -2,6 +2,7 @@
 
 This project allows anyone to use Twilio Lookup by texting / sending image of a phone number.
 
+![](./assets/Twilio-Lookup-OCR-Demo.gif)
 ## Prerequisite
 
 You will need the following:
