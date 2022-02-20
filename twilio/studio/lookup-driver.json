@@ -1,0 +1,552 @@
+{
+    "description": "A New Flow",
+    "states": [
+      {
+        "name": "Trigger",
+        "type": "trigger",
+        "transitions": [
+          {
+            "event": "incomingMessage"
+          },
+          {
+            "event": "incomingCall"
+          },
+          {
+            "next": "InitalVariables",
+            "event": "incomingRequest"
+          },
+          {
+            "event": "incomingParent"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": -30,
+            "y": -110
+          }
+        }
+      },
+      {
+        "name": "Lookup",
+        "type": "make-http-request",
+        "transitions": [
+          {
+            "next": "SendLookupResult",
+            "event": "success"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 750,
+            "y": 1460
+          },
+          "method": "POST",
+          "content_type": "application/json;charset=utf-8",
+          "body": "{\n \"phoneNumber\":\"{{flow.variables. currentPhoneNumber}}\",\n \"options\":{\n \"type\":[\n \"caller-name\",\n \"carrier\"\n       ],\n \"addOns\":\n       {% if flow.data.text contains '-all' %}\n        [\"nomorobo_spamscore\", \"ekata_reverse_phone\"]\n       {% else %}\n        [\"nomorobo_spamscore\"]\n       {% endif %}\n \n    },\n \"isCleanUpResponse\":true\n}",
+          "url": "{{flow.variables.ServerlessBaseURL}}/twilio/lookup/index"
+        }
+      },
+      {
+        "name": "hasPhoneNumbers",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "next": "SendNoPhoneMessage",
+            "event": "noMatch"
+          },
+          {
+            "next": "SendIntroMessage",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "true",
+                "arguments": [
+                  "{{widgets.findPhoneNumbers.parsed.size}}"
+                ],
+                "type": "greater_than",
+                "value": "0"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{widgets.findPhoneNumbers.parsed.size}}",
+          "offset": {
+            "x": -170,
+            "y": 580
+          }
+        }
+      },
+      {
+        "name": "SetLoopVariables",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "getPhoneNumber",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "0",
+              "key": "iterator"
+            }
+          ],
+          "offset": {
+            "x": 520,
+            "y": 900
+          }
+        }
+      },
+      {
+        "name": "getPhoneNumber",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "Lookup",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{% assign i = flow.variables.iterator | plus: 0 %}{{widgets.findPhoneNumbers.parsed.results[i]}}",
+              "key": "currentPhoneNumber"
+            }
+          ],
+          "offset": {
+            "x": 660,
+            "y": 1170
+          }
+        }
+      },
+      {
+        "name": "IncrementLoopVariable",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "split_1",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{% assign i = flow.variables.iterator | plus: 1 %}{{i}}",
+              "key": "iterator"
+            }
+          ],
+          "offset": {
+            "x": 690,
+            "y": 2030
+          }
+        }
+      },
+      {
+        "name": "split_1",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "event": "noMatch"
+          },
+          {
+            "next": "getPhoneNumber",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "true",
+                "arguments": [
+                  "{{flow.variables.iterator}}"
+                ],
+                "type": "less_than",
+                "value": "{{widgets.findPhoneNumbers.parsed.size}}"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{flow.variables.iterator}}",
+          "offset": {
+            "x": 270,
+            "y": 2270
+          }
+        }
+      },
+      {
+        "name": "SendLookupResult",
+        "type": "send-message",
+        "transitions": [
+          {
+            "next": "IncrementLoopVariable",
+            "event": "sent"
+          },
+          {
+            "next": "SendFailureMessage",
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 680,
+            "y": 1760
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "{{flow.channel.address}}",
+          "to": "{{contact.channel.address}}",
+          "body": "{{widgets.Lookup.body}}"
+        }
+      },
+      {
+        "name": "SendIntroMessage",
+        "type": "send-message",
+        "transitions": [
+          {
+            "next": "SetLoopVariables",
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": -99,
+            "y": 892
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "{{flow.channel.address}}",
+          "to": "{{contact.channel.address}}",
+          "body": "Looking up the following phone numbers:\n\n{{widgets.findPhoneNumbers.parsed.results}}"
+        }
+      },
+      {
+        "name": "SendNoPhoneMessage",
+        "type": "send-message",
+        "transitions": [
+          {
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": -490,
+            "y": 920
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "{{flow.channel.address}}",
+          "to": "{{contact.channel.address}}",
+          "body": "Detected no Phone Number(s)"
+        }
+      },
+      {
+        "name": "hasMMs",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "next": "set_variables_2",
+            "event": "noMatch"
+          },
+          {
+            "next": "SetLoopVariablesMMS",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "true",
+                "arguments": [
+                  "{{flow.data.mediaURLsSize}}"
+                ],
+                "type": "greater_than",
+                "value": "0"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{flow.data.mediaURLsSize}}",
+          "offset": {
+            "x": 1040,
+            "y": 170
+          }
+        }
+      },
+      {
+        "name": "SetLoopVariablesMMS",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "getMediaURL",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "0",
+              "key": "iterator"
+            },
+            {
+              "value": "a",
+              "key": "AllText"
+            }
+          ],
+          "offset": {
+            "x": 1370,
+            "y": 470
+          }
+        }
+      },
+      {
+        "name": "getMediaURL",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "OCR",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{% assign i = flow.variables.iterator | plus: 0 %}{{flow.data.mediaURLs[i]}}",
+              "key": "currentMediaURL"
+            }
+          ],
+          "offset": {
+            "x": 1490,
+            "y": 830
+          }
+        }
+      },
+      {
+        "name": "IncrementLoopVariableMMS",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "Copy_of_split_1",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{% assign i = flow.variables.iterator | plus: 1 %}{{i}}",
+              "key": "iterator"
+            }
+          ],
+          "offset": {
+            "x": 1570,
+            "y": 1400
+          }
+        }
+      },
+      {
+        "name": "Copy_of_split_1",
+        "type": "split-based-on",
+        "transitions": [
+          {
+            "next": "set_variables_3",
+            "event": "noMatch"
+          },
+          {
+            "next": "getMediaURL",
+            "event": "match",
+            "conditions": [
+              {
+                "friendly_name": "true",
+                "arguments": [
+                  "{{flow.variables.iterator}}"
+                ],
+                "type": "less_than",
+                "value": "{{flow.data.mediaURLsSize}}"
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "input": "{{flow.variables.iterator}}",
+          "offset": {
+            "x": 1210,
+            "y": 1620
+          }
+        }
+      },
+      {
+        "name": "OCR",
+        "type": "make-http-request",
+        "transitions": [
+          {
+            "next": "set_variables_1",
+            "event": "success"
+          },
+          {
+            "next": "OCR",
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 1900,
+            "y": 1080
+          },
+          "method": "POST",
+          "content_type": "application/json;charset=utf-8",
+          "body": "{\n   \"mediaURL\":\"{{flow.variables.currentMediaURL}}\"\n}",
+          "url": "{{flow.variables.ServerlessBaseURL}}/google/vision/ocr"
+        }
+      },
+      {
+        "name": "set_variables_1",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "IncrementLoopVariableMMS",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{{flow.variables.AllText |  append: widgets.OCR.body}}",
+              "key": "AllText"
+            }
+          ],
+          "offset": {
+            "x": 2030,
+            "y": 1370
+          }
+        }
+      },
+      {
+        "name": "set_variables_2",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "findPhoneNumbers",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{{flow.data.text}}",
+              "key": "AllText"
+            }
+          ],
+          "offset": {
+            "x": 770,
+            "y": 490
+          }
+        }
+      },
+      {
+        "name": "set_variables_3",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "findPhoneNumbers",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "{{flow.variables.AllText |  append: flow.data.text}}",
+              "key": "AllText"
+            }
+          ],
+          "offset": {
+            "x": 1060,
+            "y": 950
+          }
+        }
+      },
+      {
+        "name": "findPhoneNumbers",
+        "type": "make-http-request",
+        "transitions": [
+          {
+            "next": "hasPhoneNumbers",
+            "event": "success"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 240,
+            "y": 340
+          },
+          "method": "POST",
+          "content_type": "application/x-www-form-urlencoded;charset=utf-8",
+          "body": "",
+          "parameters": [
+            {
+              "value": "{{flow.variables.AllText}}",
+              "key": "text"
+            }
+          ],
+          "url": "{{flow.variables.ServerlessBaseURL}}/phoneNumber/findPhoneNumbers"
+        }
+      },
+      {
+        "name": "InitalVariables",
+        "type": "set-variables",
+        "transitions": [
+          {
+            "next": "hasMMs",
+            "event": "next"
+          }
+        ],
+        "properties": {
+          "variables": [
+            {
+              "value": "https://serverless-1102-dev.twil.io",
+              "key": "ServerlessBaseURL"
+            }
+          ],
+          "offset": {
+            "x": 700,
+            "y": -260
+          }
+        }
+      },
+      {
+        "name": "SendFailureMessage",
+        "type": "send-message",
+        "transitions": [
+          {
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 1060,
+            "y": 1950
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "{{flow.channel.address}}",
+          "to": "{{contact.channel.address}}",
+          "body": "Fail to send the sms due to result is over 1600 characters."
+        }
+      }
+    ],
+    "initial_state": "Trigger",
+    "flags": {
+      "allow_concurrent_calls": true
+    }
+  }

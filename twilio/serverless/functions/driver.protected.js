@@ -3,7 +3,7 @@
  * @param {Object} context 
  * @param {Object} event 
  * @param {Function} callback 
- * @returns Studio Flow Execution Object
+ * @returns Null (Work around error `Invalid Content-Type: application/json supplied`)
  */
 exports.handler = async(context, event, callback) => {
   try {
@@ -30,7 +30,7 @@ exports.handler = async(context, event, callback) => {
       from: TWILIO_PHONE_NUMBER,
     });
 
-    return callback(null, execution);
+    return callback(null, null);
   } catch(e) {
     return callback(e);
   }

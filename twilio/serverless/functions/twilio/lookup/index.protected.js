@@ -24,7 +24,7 @@ exports.handler = async(context, event, callback) => {
  */
 const cleanUpResponse = (lookupResult) => {
   // Twilio Serverless doesn't support Optional Chaining.
-  const result = {
+  const resultJSON = {
     'Phone Number': lookupResult.phoneNumber,
     'Caller Id': 
     lookupResult.callerName ? lookupResult.callerName.caller_name : '',
@@ -35,17 +35,21 @@ const cleanUpResponse = (lookupResult) => {
     lookupResult.carrier ? lookupResult.carrier.type : '',
   }
 
+  let result = JSON.stringify(resultJSON, null, 4);
+
   // Add Add-Ons Results
   if(lookupResult.addOns && lookupResult.addOns.results) {
     if(lookupResult.addOns.results.nomorobo_spamscore) {
-      result['isSpam'] = lookupResult.addOns.results.nomorobo_spamscore.status === 'successful' && 
+      resultJSON['isSpam'] = lookupResult.addOns.results.nomorobo_spamscore.status === 'successful' && 
       lookupResult.addOns.results.nomorobo_spamscore.result.score === 1 ? 'true' : 'false';
     }
 
     if(lookupResult.addOns.results.ekata_reverse_phone && lookupResult.addOns.results.ekata_reverse_phone.status === 'successful') {
-      result['Additional Info'] = lookupResult.addOns.results.ekata_reverse_phone.result;
+      resultJSON['Additional Info'] = lookupResult.addOns.results.ekata_reverse_phone.result;
+      // A work around of the 1600 character limit.
+      result = JSON.stringify(resultJSON);
     }
   }
 
-  return JSON.stringify(result, null, 4);
+  return result;
 }
