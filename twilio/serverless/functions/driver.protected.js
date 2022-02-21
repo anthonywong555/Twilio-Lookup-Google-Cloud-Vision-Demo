@@ -7,8 +7,8 @@
  */
 exports.handler = async(context, event, callback) => {
   try {
-    const {From, Body} = event;
-    const {ACCOUNT_SID, AUTH_TOKEN, TWILIO_STUDIO_FLOW, TWILIO_PHONE_NUMBER} = context;
+    const {From, Body, To} = event;
+    const {ACCOUNT_SID, AUTH_TOKEN, TWILIO_STUDIO_FLOW} = context;
     const twilioClient = require('twilio')(ACCOUNT_SID, AUTH_TOKEN);
 
     // Get all the MediaUrl##'s Value from the Event
@@ -27,7 +27,7 @@ exports.handler = async(context, event, callback) => {
     .create({
       parameters,
       to: From,
-      from: TWILIO_PHONE_NUMBER,
+      from: To,
     });
 
     return callback(null, null);
