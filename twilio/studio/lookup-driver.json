@@ -185,7 +185,7 @@
           "event": "sent"
         },
         {
-          "next": "SendFailureMessage",
+          "next": "setInitalVariables",
           "event": "failed"
         }
       ],
@@ -522,11 +522,45 @@
       }
     },
     {
-      "name": "SendFailureMessage",
+      "name": "setInitalVariables",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "SendLookupResultLoop",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "0",
+            "key": "sliceStart"
+          },
+          {
+            "value": "1500",
+            "key": "SMSChunk"
+          },
+          {
+            "value": "{{widgets.Lookup.body | size}}",
+            "key": "SMSLength"
+          },
+          {
+            "value": "1",
+            "key": "SMSCounter"
+          }
+        ],
+        "offset": {
+          "x": 1120,
+          "y": 1990
+        }
+      }
+    },
+    {
+      "name": "SendLookupResultLoop",
       "type": "send-message",
       "transitions": [
         {
-          "next": "IncrementLoopVariable",
+          "next": "IncrementVariables",
           "event": "sent"
         },
         {
@@ -535,14 +569,71 @@
       ],
       "properties": {
         "offset": {
-          "x": 1060,
-          "y": 1950
+          "x": 1110,
+          "y": 2300
         },
         "service": "{{trigger.message.InstanceSid}}",
         "channel": "{{trigger.message.ChannelSid}}",
         "from": "{{flow.channel.address}}",
         "to": "{{contact.channel.address}}",
-        "body": "Fail to send the sms due to result is over 1600 characters."
+        "body": "{{flow.variables. currentPhoneNumber}}  Part {{flow.variables.SMSCounter}}\n\n {{widgets.Lookup.body |  slice: flow.variables.sliceStart, flow.variables.SMSChunk}}"
+      }
+    },
+    {
+      "name": "IncrementVariables",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "CheckToSeeToRunLoopAgain",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "{{flow.variables.sliceStart | plus:flow.variables.SMSChunk}}",
+            "key": "sliceStart"
+          },
+          {
+            "value": "{{flow.variables.SMSCounter | plus:1}}",
+            "key": "SMSCounter"
+          }
+        ],
+        "offset": {
+          "x": 960,
+          "y": 2610
+        }
+      }
+    },
+    {
+      "name": "CheckToSeeToRunLoopAgain",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "IncrementLoopVariable",
+          "event": "noMatch"
+        },
+        {
+          "next": "SendLookupResultLoop",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "If value less_than {{flow.variables.SMSLength}}",
+              "arguments": [
+                "{{flow.variables.sliceStart}}"
+              ],
+              "type": "less_than",
+              "value": "{{flow.variables.SMSLength}}"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{flow.variables.sliceStart}}",
+        "offset": {
+          "x": 940,
+          "y": 2930
+        }
       }
     }
   ],
