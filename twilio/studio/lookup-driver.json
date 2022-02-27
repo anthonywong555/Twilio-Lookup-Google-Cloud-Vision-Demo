@@ -576,7 +576,7 @@
         "channel": "{{trigger.message.ChannelSid}}",
         "from": "{{flow.channel.address}}",
         "to": "{{contact.channel.address}}",
-        "body": "{{flow.variables. currentPhoneNumber}}  Part {{flow.variables.SMSCounter}}\n\n {{widgets.Lookup.body |  slice: flow.variables.sliceStart, flow.variables.SMSChunk}}"
+        "body": "{% assign sliceStartVar = flow.variables.sliceStart | plus:0 | plus:flow.variables.SMSChunk %}\n{% assign SMSLengthVar = flow.variables.SMSLength | plus:0 %}\n{{flow.variables. currentPhoneNumber}} Part {{flow.variables.SMSCounter}}{% if sliceStartVar >= SMSLengthVar %} - Last{% endif %}\n\n{{widgets.Lookup.body |  slice: flow.variables.sliceStart, flow.variables.SMSChunk}}"
       }
     },
     {
