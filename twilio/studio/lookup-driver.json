@@ -526,7 +526,7 @@
       "type": "set-variables",
       "transitions": [
         {
-          "next": "SendLookupResultLoop",
+          "next": "PerformDivision",
           "event": "next"
         }
       ],
@@ -576,7 +576,7 @@
         "channel": "{{trigger.message.ChannelSid}}",
         "from": "{{flow.channel.address}}",
         "to": "{{contact.channel.address}}",
-        "body": "{% assign sliceStartVar = flow.variables.sliceStart | plus:0 | plus:flow.variables.SMSChunk %}\n{% assign SMSLengthVar = flow.variables.SMSLength | plus:0 %}\n{{flow.variables. currentPhoneNumber}} Part {{flow.variables.SMSCounter}}{% if sliceStartVar >= SMSLengthVar %} - Last{% endif %}\n\n{{widgets.Lookup.body |  slice: flow.variables.sliceStart, flow.variables.SMSChunk}}"
+        "body": "{% assign sliceStartVar = flow.variables.sliceStart | plus:0 | plus:flow.variables.SMSChunk %}\n{% assign SMSLengthVar = flow.variables.SMSLength | plus:0 %}\n{{flow.variables. currentPhoneNumber}} Part {{flow.variables.SMSCounter}}/{{flow.variables.TotalSMSParts}}{% if sliceStartVar >= SMSLengthVar %} - Last{% endif %}\n\n{{widgets.Lookup.body |  slice: flow.variables.sliceStart, flow.variables.SMSChunk}}"
       }
     },
     {
@@ -633,6 +633,51 @@
         "offset": {
           "x": 940,
           "y": 2930
+        }
+      }
+    },
+    {
+      "name": "PerformDivision",
+      "type": "make-http-request",
+      "transitions": [
+        {
+          "next": "setTotalSMSParts",
+          "event": "success"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 1690,
+          "y": 2130
+        },
+        "method": "POST",
+        "content_type": "application/json;charset=utf-8",
+        "body": "{\n    \"numerator\": {{flow.variables.SMSLength}},\n    \"denominator\": \"{{flow.variables.SMSChunk}}\"\n}",
+        "url": "https://serverless-1102-dev.twil.io/math/divide"
+      }
+    },
+    {
+      "name": "setTotalSMSParts",
+      "type": "set-variables",
+      "transitions": [
+        {
+          "next": "SendLookupResultLoop",
+          "event": "next"
+        }
+      ],
+      "properties": {
+        "variables": [
+          {
+            "value": "{{widgets.PerformDivision.parsed.result |  ceil}}",
+            "key": "TotalSMSParts"
+          }
+        ],
+        "offset": {
+          "x": 1680,
+          "y": 2430
         }
       }
     }
